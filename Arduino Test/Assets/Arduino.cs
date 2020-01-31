@@ -10,7 +10,8 @@ public class Arduino : MonoBehaviour
     public GameObject playerOne;
     public GameObject playerTwo;
     public bool controllerActive = false;
-    public int commPort = 4;
+    public int commPort;
+    float contDelay;
 
     private SerialPort serial = null;
     private bool connected = false;
@@ -35,18 +36,17 @@ public class Arduino : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
         if (controllerActive)
         {
-            WriteToArduino("I");                // Ask for the positions
-            String value = ReadFromArduino(50); // read the positions
+            WriteToArduino("D");
+            String value = ReadFromArduino(50);
 
             if (value != null)                  // check to see if we got what we need
             {
                 // EXPECTED VALUE FORMAT: "0-1023"
                 string[] values = value.Split('-');     // split the values
 
-                if (values.Length == 2)
+                if (values.Length == 4)
                 {
                     positionPlayers(values);
                 }
@@ -58,21 +58,40 @@ public class Arduino : MonoBehaviour
     {
         if (playerOne != null)
         {
-            float xPos = Remap(int.Parse(values[0]), 0, 1023, 0, 10);         // scale the input. this could be done on the Arduino as well.
+            float xPos = Remap(int.Parse(values[2]), 0, 1023, 0, 10);         // scale the input. this could be done on the Arduino as well.
+            float zPos = float.Parse(values[0]);
+            zPos /= 5;
+            zPos *= -1;
+            zPos -= 8;
+
+            if (zPos < -15)
+            {
+                zPos = -15;
+            }
 
             Vector3 newPosition = new Vector3(xPos,       // create a new Vector for the position
-                playerOne.transform.position.y, playerOne.transform.position.z);
+                playerOne.transform.position.y, zPos);
 
-            playerOne.transform.position = newPosition;        // apply the new position
+            playerOne.transform.position = Vector3.Lerp(playerOne.transform.position, newPosition, 5 * Time.deltaTime);        // apply the new position
         }
         if (playerTwo != null)
         {
-            float xPos = Remap(int.Parse(values[1]), 0, 1023, 0, 10);         // scale the input. this could be done on the Arduino as well.
+            float xPos = Remap(int.Parse(values[3]), 0, 1023, 0, 10);
+            float zPos = float.Parse(values[1]);
+            zPos /= 5;
+            zPos *= -1;
+            zPos -= 8;
+
+            if (zPos < -15)
+            {
+                zPos = -15;
+            }
+            // scale the input. this could be done on the Arduino as well.
 
             Vector3 newPosition = new Vector3(xPos,       // create a new Vector for the position
-                playerTwo.transform.position.y, playerTwo.transform.position.z);
+                playerTwo.transform.position.y, zPos);
 
-            playerTwo.transform.position = newPosition;        // apply the new position
+            playerTwo.transform.position = Vector3.Lerp(playerTwo.transform.position, newPosition, 5 * Time.deltaTime);         // apply the new position
         }
 
     }

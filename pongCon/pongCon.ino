@@ -1,13 +1,22 @@
-const int ledPin = 13;
+const int echoPin = 12;
+const int trigPin = 13;
+
+const int echoPinTwo = 10;
+const int trigPinTwo = 11;
 
 int incomingByte;
+long duration, dist, distTwo;
 
 void setup()
 {
   // init serial.
   Serial.begin(9600);
-  // init LED pin as out.
-  pinMode(ledPin, OUTPUT);
+
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+
+  pinMode(trigPinTwo, OUTPUT);
+  pinMode(echoPinTwo, INPUT);
 }
 
 void loop()
@@ -16,19 +25,43 @@ void loop()
   if (Serial.available() > 0){
     // read the oldest byte in the serial buffer:
     incomingByte = Serial.read();
-    // if it's a capital H (ASCII 72), turn on the LED:
-    if (incomingByte == 'H'){
-      digitalWrite(ledPin, HIGH);
-    }
-    // if it's an L (ASCII 76) turn off the LED:
-    if (incomingByte == 'L') {
-      digitalWrite(ledPin, LOW);
-    }
-    
-    if (incomingByte == 'I'){
+
+    if (incomingByte == 'D')
+    {
+      digitalWrite(trigPin, LOW);
+      delayMicroseconds(5);
+      digitalWrite(trigPin, HIGH);
+      delayMicroseconds(10);
+      digitalWrite(trigPin, LOW);
+
+      pinMode(echoPin, INPUT);
+      duration = pulseIn(echoPin, HIGH);
+      dist = (duration/2) / 29.1; 
+
+      digitalWrite(trigPinTwo, LOW);
+      delayMicroseconds(5);
+      digitalWrite(trigPinTwo, HIGH);
+      delayMicroseconds(10);
+      digitalWrite(trigPinTwo, LOW);
+
+      pinMode(echoPinTwo, INPUT);
+      duration = pulseIn(echoPinTwo, HIGH);
+      distTwo = (duration/2) / 29.1; 
+
+      Serial.print(dist);
+      Serial.print("-");
+      Serial.print(distTwo);
+      Serial.print("-");
       Serial.print(analogRead(A0));
       Serial.print("-");
-      Serial.println(analogRead(A1));
+      Serial.println(analogRead(A5));
+    }
+    
+    if (incomingByte == 'I')
+    {
+      Serial.print(analogRead(A0));
+      Serial.print("-");
+      Serial.println(analogRead(A2));
     }
   }
 }
